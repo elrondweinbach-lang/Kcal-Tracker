@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>5 kg Countdown • Nutrition & Deficit</title>
+  
+  <!-- Apple Web App & Homescreen Config -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kcal Countdown">
+  <meta name="theme-color" content="#071913">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            luxury: {
+              darkest: '#05110D',
+              forest: '#09211A',
+              card: '#0D2D23',
+              cardHover: '#12392E',
+              border: '#1E4A3B',
+              borderSubtle: '#153C30',
+              gold: '#D4AF37',
+              goldLight: '#F3E5AB',
+              goldDim: '#997E29',
+              goldMuted: 'rgba(212, 175, 55, 0.15)',
+              cream: '#F7F5EE',
+              emerald: '#10B981',
+              rose: '#E06A6A',
+            }
+          },
+          boxShadow: {
+            'gold-glow': '0 0 25px -4px rgba(212, 175, 55, 0.25)',
+            'card-luxury': '0 12px 30px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(212, 175, 55, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      background-color: #05110D;
+      color: #F7F5EE;
+    }
+    input, textarea {
+      user-select: auto;
+    }
+    /* Smooth custom scrollbars */
+    ::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E4A3B;
+      border-radius: 9999px;
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FFF1CA 0%, #D4AF37 55%, #AA820A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gold-btn-gradient {
+      background: linear-gradient(135deg, #E6C86E 0%, #D4AF37 50%, #B89223 100%);
+    }
+    .card-glass {
+      background: linear-gradient(165deg, rgba(13, 45, 35, 0.95) 0%, rgba(8, 26, 20, 0.98) 100%);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-luxury-gold selection:text-luxury-darkest pb-10">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 bg-luxury-darkest/90 backdrop-blur-md border-b border-luxury-border/60 px-4 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-2xl gold-btn-gradient flex items-center justify-center font-serif text-luxury-darkest font-extrabold text-lg shadow-gold-glow">
+          ⚜️
+        </div>
+        <div>
+          <h1 class="text-xs uppercase tracking-widest text-luxury-goldLight font-bold">Defizit & Protein Club</h1>
+          <p class="text-[11px] text-luxury-cream/60 font-mono">Ziel: -5 kg Körperfett</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleInfoModal(true)" class="w-8 h-8 rounded-full border border-luxury-gold/40 text-luxury-goldLight flex items-center justify-center text-xs hover:bg-luxury-gold/10 transition" title="Widget Anleitung">
+          📱
+        </button>
+        <button onclick="toggleSettingsModal(true)" class="w-8 h-8 rounded-full border border-luxury-border text-luxury-cream/70 flex items-center justify-center hover:bg-luxury-card transition" title="Einstellungen">
+          ⚙️
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="max-w-md mx-auto grid grid-cols-2 gap-1.5 bg-luxury-forest/80 p-1 rounded-2xl border border-luxury-border/70 mt-3">
+      <button id="tabBtnToday" onclick="switchTab('today')" class="py-2 text-xs font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 bg-luxury-card text-luxury-goldLight shadow-card-luxury border border-luxury-gold/30">
+        <span>📅</span> Aktueller Monat
+      </button>
+      <button id="tabBtnDiary" onclick="switchTab('diary')" class="py-2 text-xs font-medium rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-luxury-cream/60 hover:text-luxury-cream">
+        <span>📖</span> Tagebuch
+        <span id="diaryCountPill" class="text-[10px] px-1.5 py-0.5 bg-luxury-darkest text-luxury-gold rounded-full font-mono">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-md mx-auto w-full px-4 pt-4 space-y-4">
+
+    <!-- VIEW 1: TODAY & CURRENT MONTH -->
+    <div id="viewToday" class="space-y-4">
+      
+      <!-- HERO COUNTDOWN CARD (Emerald & Gold) -->
+      <div class="relative overflow-hidden rounded-[26px] card-glass border border-luxury-gold/30 p-6 shadow-card-luxury">
+        <div class="absolute -top-16 -right-16 w-44 h-44 bg-luxury-gold/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -left-16 w-44 h-44 bg-luxury-emerald/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-luxury-goldMuted text-luxury-goldLight border border-luxury-gold/30">
+            <span class="w-1.5 h-1.5 rounded-full bg-luxury-gold animate-pulse"></span>
+            35.000 kcal Countdown
+          </span>
+          <span id="savedPercentBadge" class="text-xs font-mono font-bold text-luxury-goldLight">0.0% erreicht</span>
+        </div>
+
+        <div class="text-center my-4">
+          <div class="text-[11px] uppercase tracking-widest text-luxury-cream/60 font-semibold">Noch verbleibend</div>
+          <div class="flex items-baseline justify-center gap-1.5 mt-1">
+            <span id="remainingKcalDisplay" class="text-5xl font-black font-mono tracking-tight gold-gradient-text drop-shadow">35.000</span>
+            <span class="text-lg font-serif italic text-luxury-goldLight">kcal</span>
+          </div>
+        </div>
+
+        <!-- Luxury Progress Line -->
+        <div class="space-y-2">
+          <div class="w-full bg-luxury-darkest/90 rounded-full h-3 p-0.5 border border-luxury-border">
+            <div id="countdownProgressBar" class="h-full gold-btn-gradient rounded-full transition-all duration-700 ease-out shadow-gold-glow" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between items-center text-[11px] font-mono text-luxury-cream/70">
+            <span>Erspart: <strong id="totalDeficitAchieved" class="text-luxury-goldLight font-bold">0 kcal</strong></span>
+            <span>Verbranntes Fett: <strong id="fatLossKgDisplay" class="text-emerald-400 font-bold">0.00 kg</strong></span>
+          </div>
+        </div>
+
+        <!-- Mini Stats Row: Protein & Daily Status -->
+        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-luxury-border/60">
+          <div class="bg-luxury-forest/80 rounded-xl p-2.5 border border-luxury-borderSubtle text-center">
+            <div class="text-[10px] uppercase tracking-wider text-luxury-cream/50">Tages-Protein</div>
+            <div class="text-sm font-mono font-bold text-luxury-goldLight mt-0.5" id="heroProteinProgress">28 / 150g</div>
+          </div>
+          <div class="bg-luxury-forest/80 rounded-xl p-2.5 border border-luxury-borderSubtle text-center">
+            <div class="text-[10px] uppercase tracking-wider text-luxury-cream/50">Tages-Kalorien</div>
+            <div class="text-sm font-mono font-bold text-luxury-cream mt-0.5" id="heroIntakeProgress">335 kcal</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEAL LOGGER CARD -->
+      <div class="rounded-[22px] card-glass border border-luxury-border p-4 shadow-card-luxury space-y-3">
+        <div class="flex items-center justify-between border-b border-luxury-border/60 pb-2">
+          <h2 class="text-xs uppercase tracking-wider font-bold text-luxury-goldLight flex items-center gap-2">
+            <span>✨</span> Mahlzeit eintragen
+          </h2>
+          <span class="text-[10px] font-mono text-luxury-cream/50" id="currentDateIndicator"></span>
+        </div>
+
+        <div class="space-y-2">
+          <input id="mealNameInput" type="text" placeholder="Bezeichnung (z. B. Hähnchenfilet mit Reis)" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3.5 py-2.5 text-xs text-luxury-cream placeholder-luxury-cream/30 focus:outline-none focus:border-luxury-gold transition">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-luxury-cream/60 pl-1 block mb-0.5">Kalorien (kcal)</label>
+              <input id="mealKcalInput" type="number" placeholder="z. B. 480" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2 text-xs font-mono text-luxury-goldLight placeholder-luxury-cream/30 focus:outline-none focus:border-luxury-gold">
+            </div>
+            <div>
+              <label class="text-[10px] text-luxury-cream/60 pl-1 block mb-0.5">Protein (g)</label>
+              <input id="mealProteinInput" type="number" placeholder="z. B. 42" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2 text-xs font-mono text-emerald-400 placeholder-luxury-cream/30 focus:outline-none focus:border-luxury-gold">
+            </div>
+          </div>
+          <button onclick="addMealItem()" class="w-full gold-btn-gradient text-luxury-darkest font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-gold-glow active:scale-[0.99]">
+            + Mahlzeit hinzufügen
+          </button>
+        </div>
+
+        <!-- Meals List for Today -->
+        <div id="mealsListContainer" class="space-y-1.5 pt-2 max-h-40 overflow-y-auto pr-0.5"></div>
+
+        <!-- Google Fit Commit Section -->
+        <div class="pt-3 border-t border-luxury-border/60 space-y-2.5">
+          <label class="text-xs font-semibold text-luxury-goldLight flex items-center gap-1.5">
+            <span>🔥</span> Google Fit: Gesamtverbrauch des Tages
+          </label>
+          <div class="flex gap-2">
+            <input id="googleFitBurnedInput" type="number" placeholder="z. B. 2650 kcal" class="flex-1 bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-luxury-gold placeholder-luxury-cream/30 focus:outline-none focus:border-luxury-gold">
+            <button onclick="commitDailyResult()" class="px-4 py-2.5 bg-luxury-forest border border-luxury-gold/50 hover:bg-luxury-gold hover:text-luxury-darkest text-luxury-goldLight font-bold rounded-xl text-xs whitespace-nowrap transition-all shadow-sm">
+              Tag abrechnen
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7-COLUMN TABLE (CURRENT MONTH) -->
+      <div class="rounded-[22px] card-glass border border-luxury-border p-4 shadow-card-luxury space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xs uppercase tracking-wider font-bold text-luxury-goldLight flex items-center gap-1.5">
+              <span>📊</span> Monatsübersicht
+            </h3>
+            <p class="text-[11px] text-luxury-cream/50 font-serif italic" id="currentMonthLabel"></p>
+          </div>
+        </div>
+
+        <!-- Horizontally Scrollable 7-Column Table -->
+        <div class="overflow-x-auto rounded-xl border border-luxury-border/70 bg-luxury-darkest/90">
+          <table class="w-full text-[11px] text-left border-collapse whitespace-nowrap font-mono">
+            <thead class="bg-luxury-forest text-luxury-goldLight text-[10px] uppercase tracking-wider border-b border-luxury-border">
+              <tr>
+                <th class="p-2.5 font-bold">Datum</th>
+                <th class="p-2.5 text-right font-bold">Verbrauch</th>
+                <th class="p-2.5 text-right font-bold">Aufnahme</th>
+                <th class="p-2.5 text-right font-bold">Defizit</th>
+                <th class="p-2.5 text-right font-bold">Ziel P</th>
+                <th class="p-2.5 text-right font-bold">Aufn. P</th>
+                <th class="p-2.5 text-center font-bold">Ergebnis P</th>
+              </tr>
+            </thead>
+            <tbody id="monthTableBody" class="divide-y divide-luxury-border/40 text-luxury-cream/90">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 2: DIARY & COMPLETE ARCHIVE -->
+    <div id="viewDiary" class="space-y-4 hidden">
+      <div class="rounded-[22px] card-glass border border-luxury-border p-4 shadow-card-luxury flex items-center justify-between">
+        <div>
+          <h2 class="text-xs uppercase tracking-wider font-bold text-luxury-goldLight flex items-center gap-2">
+            <span>📖</span> Dauerhaftes Tagebuch
+          </h2>
+          <p class="text-[11px] text-luxury-cream/50">Alle Monate & detaillierte Mahlzeiten</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="toggleImportModal(true)" class="px-2.5 py-1.5 rounded-xl border border-luxury-gold/40 bg-luxury-goldMuted text-luxury-goldLight text-xs font-semibold hover:bg-luxury-gold/20 transition">
+            📥 Import
+          </button>
+          <button onclick="exportDiaryData()" class="px-2.5 py-1.5 rounded-xl border border-luxury-border bg-luxury-forest text-luxury-cream/80 text-xs font-semibold hover:bg-luxury-card transition">
+            💾 Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Diary List -->
+      <div class="space-y-2.5" id="diaryFeedContainer">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: IPHONE WIDGET INSTRUCTIONS -->
+  <div id="infoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="card-glass border border-luxury-gold/40 rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-card-luxury">
+      <div class="flex items-center justify-between pb-2 border-b border-luxury-border">
+        <h3 class="text-sm font-bold text-luxury-goldLight flex items-center gap-2">
+          <span>📲</span> Als Widget / App auf dein iPhone
+        </h3>
+        <button onclick="toggleInfoModal(false)" class="text-luxury-cream/60 hover:text-white p-1">✕</button>
+      </div>
+      <div class="text-xs text-luxury-cream/80 space-y-2.5 leading-relaxed">
+        <p>So legst du dir das Widget mit 1 Klick als Icon auf den Home-Bildschirm:</p>
+        <ol class="list-decimal pl-4 space-y-1.5 text-luxury-cream/90 font-medium">
+          <li>Öffne diesen Link in <strong>Safari</strong> (oder Chrome).</li>
+          <li>Tippe unten in der Leiste auf den <strong>Teilen-Button</strong> (Quadrat mit Pfeil nach oben).</li>
+          <li>Scrolle etwas herunter und wähle <strong>„Zum Home-Bildschirm“</strong>.</li>
+          <li>Tippe oben rechts auf <strong>„Hinzufügen“</strong>.</li>
+        </ol>
+        <p class="text-[11px] text-luxury-goldLight bg-luxury-goldMuted p-2.5 rounded-xl border border-luxury-gold/30">
+          Fertig! Jetzt hast du ein vollwertiges App-Icon auf deinem Homescreen, das all deine Daten direkt im Telefon speichert.
+        </p>
+      </div>
+      <button onclick="toggleInfoModal(false)" class="w-full gold-btn-gradient text-luxury-darkest font-bold py-2 rounded-xl text-xs">
+        Verstanden
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPORT JSON -->
+  <div id="importModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="card-glass border border-luxury-gold/40 rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-card-luxury">
+      <div class="flex items-center justify-between pb-2 border-b border-luxury-border">
+        <h3 class="text-sm font-bold text-luxury-goldLight flex items-center gap-2">
+          <span>📥</span> Chat-Daten importieren
+        </h3>
+        <button onclick="toggleImportModal(false)" class="text-luxury-cream/60 hover:text-white p-1">✕</button>
+      </div>
+      <p class="text-xs text-luxury-cream/70">
+        Füge den aus unserem Chat erstellten JSON-Code ein:
+      </p>
+      <textarea id="importJsonTextarea" rows="6" placeholder='{"remainingKcal": 34665, ...}' class="w-full bg-luxury-darkest border border-luxury-border rounded-xl p-3 text-xs font-mono text-luxury-goldLight placeholder-luxury-cream/20 focus:outline-none focus:border-luxury-gold"></textarea>
+      <div class="flex gap-2">
+        <button onclick="applyImportData()" class="flex-1 gold-btn-gradient text-luxury-darkest font-bold py-2 rounded-xl text-xs">
+          Import anwenden
+        </button>
+        <button onclick="toggleImportModal(false)" class="px-3 bg-luxury-forest border border-luxury-border text-luxury-cream/70 rounded-xl text-xs">
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="card-glass border border-luxury-border rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-card-luxury">
+      <div class="flex items-center justify-between pb-2 border-b border-luxury-border">
+        <h3 class="text-sm font-bold text-luxury-goldLight">⚙️ Einstellungen</h3>
+        <button onclick="toggleSettingsModal(false)" class="text-luxury-cream/60 hover:text-white p-1">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-luxury-cream/70 block mb-1">Start-Ziel (kcal)</label>
+          <input id="initialTargetInput" type="number" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2 text-xs font-mono text-white">
+        </div>
+        <div>
+          <label class="text-xs text-luxury-cream/70 block mb-1">Aktueller Countdown (kcal)</label>
+          <input id="currentTargetInput" type="number" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2 text-xs font-mono text-luxury-gold font-bold">
+        </div>
+        <div>
+          <label class="text-xs text-luxury-cream/70 block mb-1">Tägliches Proteinziel (g)</label>
+          <input id="proteinGoalInput" type="number" class="w-full bg-luxury-darkest border border-luxury-border rounded-xl px-3 py-2 text-xs font-mono text-emerald-400">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveSettings()" class="flex-1 gold-btn-gradient text-luxury-darkest font-bold py-2 rounded-xl text-xs">
+          Speichern
+        </button>
+        <button onclick="resetAllDataConfirmation()" class="px-3 bg-luxury-rose/10 text-luxury-rose border border-luxury-rose/30 rounded-xl text-xs">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toastMessage" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-luxury-forest border border-luxury-gold/50 text-luxury-goldLight text-xs font-medium rounded-full shadow-2xl opacity-0 pointer-events-none transition-all duration-300">
+    Hinweis
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'kcal_countdown_luxury_v1';
+
+    function getTodayString() {
+      const now = new Date();
+      return now.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    const defaultState = {
+      initialTarget: 35000,
+      remainingKcal: 35000,
+      proteinGoal: 150,
+      todayDate: getTodayString(),
+      todayMeals: [
+        {
+          id: 'meal-1',
+          name: '4 Rühreier mit 10g Parmesan',
+          kcal: 335,
+          protein: 28,
+          time: '10:00'
+        }
+      ],
+      history: []
+    };
+
+    let appState = loadState();
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return { ...defaultState, ...JSON.parse(saved) };
+      } catch (e) {
+        console.warn(e);
+      }
+      return defaultState;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.error(e);
+      }
+      renderApp();
+    }
+
+    function switchTab(tab) {
+      const viewToday = document.getElementById('viewToday');
+      const viewDiary = document.getElementById('viewDiary');
+      const btnToday = document.getElementById('tabBtnToday');
+      const btnDiary = document.getElementById('tabBtnDiary');
+
+      if (tab === 'today') {
+        viewToday.classList.remove('hidden');
+        viewDiary.classList.add('hidden');
+        btnToday.className = 'py-2 text-xs font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 bg-luxury-card text-luxury-goldLight shadow-card-luxury border border-luxury-gold/30';
+        btnDiary.className = 'py-2 text-xs font-medium rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-luxury-cream/60 hover:text-luxury-cream';
+      } else {
+        viewToday.classList.add('hidden');
+        viewDiary.classList.remove('hidden');
+        btnDiary.className = 'py-2 text-xs font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 bg-luxury-card text-luxury-goldLight shadow-card-luxury border border-luxury-gold/30';
+        btnToday.className = 'py-2 text-xs font-medium rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-luxury-cream/60 hover:text-luxury-cream';
+      }
+      renderApp();
+    }
+
+    function renderApp() {
+      const remaining = appState.remainingKcal;
+      const initial = appState.initialTarget || 35000;
+      const achieved = Math.max(0, initial - remaining);
+      const percent = Math.min(100, Math.max(0, (achieved / initial) * 100)).toFixed(1);
+      const fatLostKg = (achieved / 7000).toFixed(2);
+
+      // Hero
+      document.getElementById('remainingKcalDisplay').textContent = remaining.toLocaleString('de-DE');
+      document.getElementById('totalDeficitAchieved').textContent = achieved.toLocaleString('de-DE') + ' kcal';
+      document.getElementById('fatLossKgDisplay').textContent = `${fatLostKg} kg`;
+      document.getElementById('countdownProgressBar').style.width = `${percent}%`;
+      document.getElementById('savedPercentBadge').textContent = `${percent}% erreicht`;
+
+      // Today Header stats
+      const currentIntake = (appState.todayMeals || []).reduce((s, m) => s + (Number(m.kcal) || 0), 0);
+      const currentProtein = (appState.todayMeals || []).reduce((s, m) => s + (Number(m.protein) || 0), 0);
+      document.getElementById('heroProteinProgress').textContent = `${currentProtein} / ${appState.proteinGoal}g`;
+      document.getElementById('heroIntakeProgress').textContent = `${currentIntake} kcal`;
+      document.getElementById('currentDateIndicator').textContent = getTodayString();
+
+      // Meals list
+      const mealsContainer = document.getElementById('mealsListContainer');
+      mealsContainer.innerHTML = '';
+      if (!appState.todayMeals || appState.todayMeals.length === 0) {
+        mealsContainer.innerHTML = '<div class="text-[11px] text-luxury-cream/40 py-1 italic">Heute noch keine Speisen eingetragen.</div>';
+      } else {
+        appState.todayMeals.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between bg-luxury-forest/90 px-3 py-2 rounded-xl border border-luxury-borderSubtle text-xs';
+          div.innerHTML = `
+            <div>
+              <span class="font-medium text-luxury-cream">${escapeHtml(m.name)}</span>
+              <span class="text-[10px] text-luxury-cream/40 ml-1">(${m.time || ''})</span>
+            </div>
+            <div class="flex items-center gap-2.5 font-mono">
+              <span class="text-luxury-goldLight text-[11px]">${m.kcal} kcal</span>
+              <span class="text-emerald-400 text-[11px] font-bold">${m.protein}g P</span>
+              <button onclick="removeMealItem('${m.id}')" class="text-luxury-cream/40 hover:text-luxury-rose p-0.5 ml-1">✕</button>
+            </div>
+          `;
+          mealsContainer.appendChild(div);
+        });
+      }
+
+      // Render 7-column table & diary
+      renderCurrentMonthTable();
+      renderDiaryList();
+    }
+
+    function renderCurrentMonthTable() {
+      const now = new Date();
+      const monthKey = (now.getMonth() + 1).toString().padStart(2, '0') + '.' + now.getFullYear();
+      const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+      document.getElementById('currentMonthLabel').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+
+      const tbody = document.getElementById('monthTableBody');
+      tbody.innerHTML = '';
+
+      const monthRows = appState.history.filter(h => h.date && h.date.endsWith(monthKey));
+
+      if (monthRows.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="p-4 text-center text-luxury-cream/40 text-xs italic">
+              Noch keine abgeschlossenen Tage im ${monthNames[now.getMonth()]}.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      monthRows.slice().reverse().forEach(row => {
+        const isDeficit = (row.netDeficit || 0) >= 0;
+        const pDiff = (row.protein || 0) - (appState.proteinGoal || 150);
+        const pReached = pDiff >= 0;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-luxury-forest/50 transition-colors';
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-luxury-goldLight">${row.date}</td>
+          <td class="p-2.5 text-right text-luxury-cream">${row.burned.toLocaleString('de-DE')}</td>
+          <td class="p-2.5 text-right text-luxury-goldLight">${row.intake.toLocaleString('de-DE')}</td>
+          <td class="p-2.5 text-right font-bold ${isDeficit ? 'text-emerald-400' : 'text-luxury-rose'}">
+            ${isDeficit ? '-' : '+'}${Math.abs(row.netDeficit || 0).toLocaleString('de-DE')}
+          </td>
+          <td class="p-2.5 text-right text-luxury-cream/50">${appState.proteinGoal || 150}g</td>
+          <td class="p-2.5 text-right font-bold ${pReached ? 'text-emerald-400' : 'text-luxury-goldLight'}">${row.protein || 0}g</td>
+          <td class="p-2.5 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] ${pReached ? 'bg-emerald-950 text-emerald-300 border border-emerald-700/50' : 'bg-luxury-forest text-luxury-gold border border-luxury-gold/40'}">
+              ${pReached ? '✓ Erreicht' : `${pDiff}g`}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderDiaryList() {
+      document.getElementById('diaryCountPill').textContent = appState.history.length;
+      const feed = document.getElementById('diaryFeedContainer');
+      feed.innerHTML = '';
+
+      if (appState.history.length === 0) {
+        feed.innerHTML = `
+          <div class="rounded-2xl card-glass border border-luxury-border p-6 text-center space-y-2">
+            <span class="text-2xl block">⚜️</span>
+            <div class="text-xs font-bold text-luxury-goldLight">Dein Tagebuch ist noch leer</div>
+            <p class="text-[11px] text-luxury-cream/50">Rechne deinen ersten Tag ab, um die Historie zu starten.</p>
+          </div>
+        `;
+        return;
+      }
+
+      [...appState.history].reverse().forEach((entry, i) => {
+        const isDeficit = entry.netDeficit >= 0;
+        const entryId = 'diary-card-' + (entry.id || i);
+        const mealsCount = entry.meals ? entry.meals.length : 0;
+        const pDiff = (entry.protein || 0) - (appState.proteinGoal || 150);
+        const pReached = pDiff >= 0;
+
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl card-glass border border-luxury-border p-4 space-y-3 shadow-sm';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-luxury-cream">${entry.date}</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${isDeficit ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' : 'bg-rose-950 text-rose-400 border border-rose-800/40'}">
+                ${isDeficit ? '-' + entry.netDeficit.toLocaleString('de-DE') + ' kcal' : '+' + Math.abs(entry.netDeficit).toLocaleString('de-DE') + ' kcal'}
+              </span>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] text-luxury-cream/50 uppercase block font-mono">Rest-Countdown</span>
+              <span class="font-mono font-bold text-xs text-luxury-goldLight">${entry.countdownAfter.toLocaleString('de-DE')} kcal</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-mono">
+            <div class="p-2 rounded-xl bg-luxury-forest border border-luxury-borderSubtle">
+              <div class="text-luxury-cream/50 text-[9px]">Google Fit</div>
+              <div class="font-bold text-luxury-cream mt-0.5">${entry.burned.toLocaleString('de-DE')} kcal</div>
+            </div>
+            <div class="p-2 rounded-xl bg-luxury-forest border border-luxury-borderSubtle">
+              <div class="text-luxury-cream/50 text-[9px]">Gegessen</div>
+              <div class="font-bold text-luxury-goldLight mt-0.5">${entry.intake.toLocaleString('de-DE')} kcal</div>
+            </div>
+            <div class="p-2 rounded-xl bg-luxury-forest border border-luxury-borderSubtle">
+              <div class="text-luxury-cream/50 text-[9px]">Protein (${entry.protein || 0}g)</div>
+              <div class="font-bold ${pReached ? 'text-emerald-400' : 'text-luxury-gold'} mt-0.5">${pReached ? '✓ Erreicht' : `${pDiff}g`}</div>
+            </div>
+          </div>
+
+          ${mealsCount > 0 ? `
+            <div class="pt-1 border-t border-luxury-border/60">
+              <button onclick="toggleDiaryMealDetails('${entryId}')" class="w-full flex items-center justify-between text-[11px] font-medium text-luxury-cream/60 hover:text-luxury-goldLight py-1 transition">
+                <span>🍽️ Aufgenommene Mahlzeiten (${mealsCount})</span>
+                <span id="chevron-${entryId}" class="text-xs transform transition-transform">▼</span>
+              </button>
+              <div id="${entryId}" class="hidden space-y-1.5 pt-1.5">
+                ${entry.meals.map(m => `
+                  <div class="flex justify-between items-center text-[11px] py-1.5 px-3 rounded-xl bg-luxury-darkest/80 border border-luxury-borderSubtle">
+                    <span class="text-luxury-cream font-medium">${escapeHtml(m.name)}</span>
+                    <span class="font-mono text-luxury-goldLight text-[10px]">${m.protein || 0}g P • ${m.kcal} kcal</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        `;
+        feed.appendChild(card);
+      });
+    }
+
+    function toggleDiaryMealDetails(id) {
+      const el = document.getElementById(id);
+      const chev = document.getElementById('chevron-' + id);
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (chev) chev.style.transform = 'rotate(180deg)';
+      } else {
+        el.classList.add('hidden');
+        if (chev) chev.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function addMealItem() {
+      const nameInput = document.getElementById('mealNameInput');
+      const kcalInput = document.getElementById('mealKcalInput');
+      const proteinInput = document.getElementById('mealProteinInput');
+
+      const name = nameInput.value.trim();
+      const kcal = parseInt(kcalInput.value);
+      const protein = parseFloat(proteinInput.value) || 0;
+
+      if (!name) return showToast('Bitte Mahlzeit benennen');
+      if (isNaN(kcal) || kcal < 0) return showToast('Bitte Kalorien eingeben');
+
+      const timeStr = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+      appState.todayMeals.push({
+        id: 'meal-' + Date.now(),
+        name,
+        kcal,
+        protein,
+        time: timeStr
+      });
+
+      nameInput.value = '';
+      kcalInput.value = '';
+      proteinInput.value = '';
+
+      saveState();
+      showToast(`„${name}“ hinzugefügt`);
+    }
+
+    function removeMealItem(id) {
+      appState.todayMeals = appState.todayMeals.filter(m => m.id !== id);
+      saveState();
+      showToast('Mahlzeit entfernt');
+    }
+
+    function commitDailyResult() {
+      const input = document.getElementById('googleFitBurnedInput');
+      const burned = parseInt(input.value);
+
+      if (isNaN(burned) || burned <= 0) {
+        return showToast('Bitte Google Fit Kalorien eintragen');
+      }
+
+      const intake = (appState.todayMeals || []).reduce((s, m) => s + (Number(m.kcal) || 0), 0);
+      const protein = (appState.todayMeals || []).reduce((s, m) => s + (Number(m.protein) || 0), 0);
+      const netDeficit = burned - intake;
+
+      appState.remainingKcal = Math.max(0, appState.remainingKcal - netDeficit);
+
+      appState.history.push({
+        id: 'day-' + Date.now(),
+        date: getTodayString(),
+        burned,
+        intake,
+        netDeficit,
+        protein,
+        countdownAfter: appState.remainingKcal,
+        meals: [...appState.todayMeals]
+      });
+
+      appState.todayMeals = [];
+      input.value = '';
+
+      saveState();
+      showToast('Tag verbucht & Countdown aktualisiert!');
+    }
+
+    // Modal controls
+    function toggleInfoModal(s) { document.getElementById('infoModal').classList.toggle('hidden', !s); }
+    function toggleImportModal(s) { document.getElementById('importModal').classList.toggle('hidden', !s); }
+    function toggleSettingsModal(s) { 
+      if (s) {
+        document.getElementById('initialTargetInput').value = appState.initialTarget;
+        document.getElementById('currentTargetInput').value = appState.remainingKcal;
+        document.getElementById('proteinGoalInput').value = appState.proteinGoal;
+      }
+      document.getElementById('settingsModal').classList.toggle('hidden', !s); 
+    }
+
+    function applyImportData() {
+      const raw = document.getElementById('importJsonTextarea').value.trim();
+      if (!raw) return showToast('Bitte JSON einfügen');
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.remainingKcal !== undefined) appState.remainingKcal = parsed.remainingKcal;
+        if (parsed.initialTarget !== undefined) appState.initialTarget = parsed.initialTarget;
+        if (parsed.proteinGoal !== undefined) appState.proteinGoal = parsed.proteinGoal;
+        if (Array.isArray(parsed.todayMeals)) appState.todayMeals = parsed.todayMeals;
+        if (Array.isArray(parsed.history)) appState.history = parsed.history;
+
+        saveState();
+        toggleImportModal(false);
+        showToast('Erfolgreich importiert!');
+      } catch (e) {
+        showToast('Ungültiges Format!');
+      }
+    }
+
+    function exportDiaryData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `countdown_backup_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast('Backup exportiert!');
+    }
+
+    function saveSettings() {
+      const iT = parseInt(document.getElementById('initialTargetInput').value);
+      const cT = parseInt(document.getElementById('currentTargetInput').value);
+      const pG = parseInt(document.getElementById('proteinGoalInput').value);
+
+      if (!isNaN(iT) && iT > 0) appState.initialTarget = iT;
+      if (!isNaN(cT) && cT >= 0) appState.remainingKcal = cT;
+      if (!isNaN(pG) && pG > 0) appState.proteinGoal = pG;
+
+      saveState();
+      toggleSettingsModal(false);
+      showToast('Einstellungen gesichert');
+    }
+
+    function resetAllDataConfirmation() {
+      if (confirm('Alles auf Anfang (35.000 kcal) zurücksetzen?')) {
+        appState = JSON.parse(JSON.stringify(defaultState));
+        saveState();
+        toggleSettingsModal(false);
+        showToast('Zurückgesetzt');
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastMessage');
+      t.textContent = msg;
+      t.classList.remove('opacity-0');
+      t.classList.add('opacity-100');
+      setTimeout(() => {
+        t.classList.remove('opacity-100');
+        t.classList.add('opacity-0');
+      }, 2400);
+    }
+
+    function escapeHtml(t) {
+      const d = document.createElement('div');
+      d.textContent = t;
+      return d.innerHTML;
+    }
+
+    window.onload = function() {
+      renderApp();
+    };
+  </script>
+</body>
+</html>
